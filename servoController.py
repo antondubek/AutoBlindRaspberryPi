@@ -5,6 +5,10 @@ import wiringpi
 import sys
 
 
+
+def getCurrentPosition():
+    return "1"
+
 def servocontroller(command):
     try:
         # arg1 = sys.argv[1] #Input

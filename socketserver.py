@@ -2,7 +2,7 @@
 import socket
 import sys
 from thread import *
-from servoController import servocontroller
+from servoController import servocontroller, getCurrentPosition
 
 HOST = ''
 PORT = int(sys.argv[1])
@@ -23,7 +23,7 @@ print 'Socket listening on port ' + str(PORT)
 
 def clientThread(conn):
 
-    conn.send('Welcome to Anthonys socket server\n')
+    # conn.send('Welcome to Anthonys socket server\n')
 
     while True:
 
@@ -41,18 +41,38 @@ def clientThread(conn):
         command = command[1:] #Remove the / from beginning
 
         # If command is PUT, then set the blind
-        if command == "PUT":
+        if check == "PUT":
             print "check is = " + check
             print "Command to send = " + command
-            # servocontroller(command)
-            break
 
-        elif command == "GET":
+            if(command == "time"):
+
+                #get the boolean
+                timeOn = firstLine[2]
+
+                #write to file
+                file = open("config.txt", "w")
+
+                if timeOn == "true":
+                    toWrite = "true," + firstLine[3] + "," + firstLine[4]
+                else:
+                    toWrite = "false,0,0"
+
+                file.write(toWrite)
+                file.close()
+
+            else:
+                servocontroller(command)
+
+        elif check == "GET":
             reply = "Return the status of the blind"
             conn.sendall(reply)
-            
-        else:
-            break
+
+        reply = getCurrentPosition()
+        print "reply = " + reply
+        conn.sendall(reply)
+
+        break
 
     conn.close()
 
