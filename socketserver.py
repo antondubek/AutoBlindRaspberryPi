@@ -30,6 +30,8 @@ def clientThread(conn):
         # Get the sent request
         data = conn.recv(1024)
 
+        print data
+
         # Save the data as an array
         dataArray = data.split("\n")
 
@@ -65,12 +67,20 @@ def clientThread(conn):
                 servocontroller(command)
 
         elif check == "GET":
-            reply = "Return the status of the blind"
-            conn.sendall(reply)
 
-        reply = getCurrentPosition()
-        print "reply = " + reply
-        conn.sendall(reply)
+            if command == "Time":
+                #read enabled, timestart and finish from file
+                file = open("config.txt", "r")
+                reply = file.readline()
+
+                #close the file
+                file.close()
+
+            elif command == "Position":
+                reply = getCurrentPosition()
+
+            print "Server response = " + reply
+            conn.sendall(reply)
 
         break
 
