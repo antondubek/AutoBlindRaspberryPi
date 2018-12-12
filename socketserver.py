@@ -4,12 +4,14 @@ import sys
 from thread import *
 from servoController import servocontroller, getCurrentPosition
 
-HOST = ''
-PORT = int(sys.argv[1])
+HOST = '' #Blank for localhost
+PORT = int(sys.argv[1]) #Get port from first argument passed
 
+# Create a socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket created'
 
+#Bind the socket to the host and port
 try:
     s.bind((HOST, PORT))
 except socket.error as msg:
@@ -18,19 +20,19 @@ except socket.error as msg:
 
 print 'Socket bind complete'
 
+# Listen for connections on the socket
 s.listen(10)
 print 'Socket listening on port ' + str(PORT)
 
-def clientThread(conn):
 
-    # conn.send('Welcome to Anthonys socket server\n')
+#Parses the connection retrieving commands and sending requests to servo controller
+def clientHandler(conn):
 
+    # Wait for a request to be passed
     while True:
 
         # Get the sent request
         data = conn.recv(1024)
-
-        #print data
 
         # Save the data as an array
         dataArray = data.split("\n")
@@ -42,13 +44,12 @@ def clientThread(conn):
         command = firstLine[1] #Save the command
         command = command[1:] #Remove the / from beginning
 
-        # If command is PUT, then set the blind
+        # If command is POST, then set the time or send to servocontroller
         if check == "POST":
             print "check is = " + check
             print "Command to send = " + command
 
             if(command == "time"):
-
                 #get the boolean
                 timeOn = firstLine[2]
 
@@ -86,13 +87,15 @@ def clientThread(conn):
 
     conn.close()
 
+# Forever, check for connections to the server
 while 1:
 
     try:
         conn, addr = s.accept()
         print 'connected with ' + addr[0] + ':' + str(addr[1])
 
-        start_new_thread(clientThread, (conn,))
+        #When have a connection, create a connection handler and pass the connection
+        start_new_thread(clientHandler, (conn,))
 
     except KeyboardInterrupt:
         s.close()
