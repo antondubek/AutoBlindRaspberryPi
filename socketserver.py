@@ -30,7 +30,7 @@ def clientThread(conn):
         # Get the sent request
         data = conn.recv(1024)
 
-        print data
+        #print data
 
         # Save the data as an array
         dataArray = data.split("\n")
@@ -43,7 +43,7 @@ def clientThread(conn):
         command = command[1:] #Remove the / from beginning
 
         # If command is PUT, then set the blind
-        if check == "PUT":
+        if check == "POST":
             print "check is = " + check
             print "Command to send = " + command
 

@@ -4,30 +4,60 @@ import time
 import wiringpi
 import sys
 
+currentPosition = 0
+pwmPin = 18
+timeToMovePosition = 2
+
+stop = 150
+clockwise = 50
+anticlockwise = 200
 
 
+# Simple getter for the current position
 def getCurrentPosition():
-    return "1"
+    return str(currentPosition)
+
+# Checks the current position and how far the servo must move to get to the position passed
+# Then engages the motor in the correct direction so it gets there.
+def moveServo(positionToMove):
+    global currentPosition
+
+    #If we arent currently in the position passed
+    if currentPosition != positionToMove:
+        print 'Blind moving from position %s to %s' %(str(currentPosition), str(positionToMove))
+
+        #Calculate distance we need to move
+        amountToMove = currentPosition - positionToMove
+
+        #Check if need to go up or down and get motor moving
+        if amountToMove > 0: #Means we are going down
+            wiringpi.pwmWrite(pwmPin, clockwise)
+        else: #means we are going up
+            wiringpi.pwmWrite(pwmPin, anticlockwise)
+
+        #Sleep for the amount of time to get to the position
+        timeToSleep = abs(amountToMove) * timeToMovePosition
+        time.sleep(timeToSleep)
+
+        #Stop the motor
+        wiringpi.pwmWrite(pwmPin, stop)
+    else:
+        print 'Blind already in that position'
+
+    # Set the position
+    currentPosition = positionToMove
+    return
+
 
 def servocontroller(command):
     try:
-        # arg1 = sys.argv[1] #Input
-        #
-        # print len(sys.argv)
-        #
-        # print arg1
-
-        stop = 150
-        clockwise = 50
-        anticlockwise = 200
-
         # use 'GPIO naming'
         wiringpi.wiringPiSetupGpio()
 
-        # set #18 to be a PWM output
-        wiringpi.pinMode(18, wiringpi.GPIO.PWM_OUTPUT)
+        # set pin to be a PWM output
+        wiringpi.pinMode(pwmPin, wiringpi.GPIO.PWM_OUTPUT)
 
-        # set the PWM mode to milliseconds stype
+        # set the PWM mode to milliseconds
         wiringpi.pwmSetMode(wiringpi.GPIO.PWM_MODE_MS)
 
         # divide down clock
@@ -36,36 +66,28 @@ def servocontroller(command):
 
         delay_period = 0.01
 
-        # while True:
-        #         for pulse in range(50, 250, 1):
-        #                 wiringpi.pwmWrite(18, pulse)
-        #                 time.sleep(delay_period)
-        #         for pulse in range(250, 50, -1):
-        #                 wiringpi.pwmWrite(18, pulse)
-        #                 time.sleep(delay_period)
-
-        # while True:
-        #     input = int(raw_input("Please insert a number: "))
-        #     wiringpi.pwmWrite(18, input)
+        #Stop the servo encase its moving
+        wiringpi.pwmWrite(pwmPin, stop)
 
         print "Servo: Command received = " + command
 
-
+        #Act on the command
         if command == 'open':
-            print 'here'
-            wiringpi.pwmWrite(18, clockwise)
-            time.sleep(5)
-
+            moveServo(4)
+        elif command == '3quarter':
+            moveServo(3)
+        elif command == 'half':
+            moveServo(2)
+        elif command == 'quarter':
+            moveServo(1)
         elif command == 'close':
-            wiringpi.pwmWrite(18, anticlockwise)
-            time.sleep(5)
+            moveServo(0)
 
-        wiringpi.pwmWrite(18, 150)
         return
 
     except KeyboardInterrupt:
         print('Interrupted')
-        wiringpi.pwmWrite(18, 150)
+        wiringpi.pwmWrite(pwmPin, stop)
         try:
             sys.exit(0)
         except SystemExit:
